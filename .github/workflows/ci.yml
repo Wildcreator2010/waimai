@@ -60,6 +60,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          # 默认还会装已下架的 'tools' 包，导致 CI 失败；只保留 platform-tools
+          packages: platform-tools
       - run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x android/gradlew

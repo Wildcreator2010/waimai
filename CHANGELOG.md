@@ -12,6 +12,7 @@
 - 默认使用联网多阶段构建 `Dockerfile.online`，新增 `deploy/quickstart.sh` 一行命令部署。
 - 新增 `Dockerfile.online.dockerignore` / `Dockerfile.dockerignore`，缩短镜像构建上下文。
 - 移除仅面向作者的 `docs/what-i-need.md`，换品牌与供应商适配说明并入 `docs/self-hosting.md`。
+- 修复 CI：保留期测试改为本地时间构造（UTC 环境可通过）；Android SDK 安装不再拉取已下架的 `tools` 包。
 
 ### 配置与再部署
 

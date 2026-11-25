@@ -81,18 +81,19 @@ describe('数据保留清理', () => {
 });
 
 describe('msUntilNextRun', () => {
+  // 用本地时间构造日期：被测函数按进程本地时区计算，这样在 UTC / +08 等环境都成立
   it('当天尚未到点则返回今天的时间差', () => {
-    const now = new Date('2026-11-10T01:00:00+08:00');
+    const now = new Date(2026, 10, 10, 1, 0, 0);
     expect(msUntilNextRun(now, 3)).toBe(2 * 3600_000);
   });
 
   it('已过点则顺延到明天', () => {
-    const now = new Date('2026-11-10T04:00:00+08:00');
+    const now = new Date(2026, 10, 10, 4, 0, 0);
     expect(msUntilNextRun(now, 3)).toBe(23 * 3600_000);
   });
 
   it('正好到点则顺延到明天（避免同一时刻重复执行）', () => {
-    const now = new Date('2026-11-10T03:00:00+08:00');
+    const now = new Date(2026, 10, 10, 3, 0, 0);
     expect(msUntilNextRun(now, 3)).toBe(24 * 3600_000);
   });
 });
