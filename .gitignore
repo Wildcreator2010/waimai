@@ -19,7 +19,9 @@ deploy/secrets/*
 *.key
 google-services.json
 *-firebase-adminsdk-*.json
-data/
+# 仅忽略服务端运行时数据；不要写裸 data/，否则会误伤
+# android/app/src/main/java/com/wildcreator/mealreminder/data 源码包
+server/data/
 
 # 数据库
 *.db

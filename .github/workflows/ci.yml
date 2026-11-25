@@ -67,10 +67,8 @@ jobs:
       - run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x android/gradlew
-      # 关键修复：Kotlin 守护进程在干净 Runner 上会让 KSP/Hilt 解析不到项目内符号；
-      # 改用进程内编译（与本地验证成功的回退路径一致），并 clean 避免缓存干扰。
-      # chinaMirrors=true：Runner 访问 Maven Central 偶发失败，用阿里云镜像保证插件可解析。
-      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -PchinaMirrors=true -Pkotlin.compiler.execution.strategy=in-process
+      # 插件仓库已在 settings.gradle.kts 中改为官方优先；chinaMirrors 仅作兜底
+      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -PchinaMirrors=true
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:
