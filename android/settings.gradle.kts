@@ -1,10 +1,19 @@
 // 取餐提醒 · Android 工程设置
-// 说明：国内网络下 google()/mavenCentral() 常被墙，故把阿里云镜像放在前面，官方仓库保留在后面兜底。
+// 默认使用 Google / Maven Central 官方源，CI 与海外网络更稳。
+// 国内网络可启用阿里云镜像：在 android/gradle.properties 取消注释 chinaMirrors=true，
+// 或执行 ./gradlew -PchinaMirrors=true assembleDebug。
 
 pluginManagement {
+    val useChinaMirrors = providers
+        .gradleProperty("chinaMirrors")
+        .orElse(providers.environmentVariable("CHINA_MIRRORS"))
+        .getOrElse("false")
+        .toBoolean()
     repositories {
-        maven { url = uri("https://maven.aliyun.com/repository/public") }
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        if (useChinaMirrors) {
+            maven { url = uri("https://maven.aliyun.com/repository/public") }
+            maven { url = uri("https://maven.aliyun.com/repository/google") }
+        }
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -12,10 +21,17 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
+    val useChinaMirrors = providers
+        .gradleProperty("chinaMirrors")
+        .orElse(providers.environmentVariable("CHINA_MIRRORS"))
+        .getOrElse("false")
+        .toBoolean()
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        maven { url = uri("https://maven.aliyun.com/repository/public") }
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        if (useChinaMirrors) {
+            maven { url = uri("https://maven.aliyun.com/repository/public") }
+            maven { url = uri("https://maven.aliyun.com/repository/google") }
+        }
         google()
         mavenCentral()
     }
