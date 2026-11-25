@@ -1,0 +1,29 @@
+name: android-diag
+
+on:
+  push:
+    branches: [fix/android-ci-cache]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe KSP plugin and artifact URLs
+        run: |
+          set -u
+          BASE_MARKER="com/google/devtools/ksp/com.google.devtools.ksp.gradle.plugin/2.0.21-1.0.25/com.google.devtools.ksp.gradle.plugin-2.0.21-1.0.25.pom"
+          BASE_ARTIFACT="com/google/devtools/ksp/symbol-processing-gradle-plugin/2.0.21-1.0.25/symbol-processing-gradle-plugin-2.0.21-1.0.25.pom"
+          for repo in \
+            "https://repo.maven.apache.org/maven2" \
+            "https://repo1.maven.org/maven2" \
+            "https://plugins.gradle.org/m2" \
+            "https://maven.aliyun.com/repository/public" \
+            "https://maven.aliyun.com/repository/google" \
+            "https://maven.aliyun.com/repository/gradle-plugin" \
+            "https://dl.google.com/dl/android/maven2"; do
+            for path in "$BASE_MARKER" "$BASE_ARTIFACT"; do
+              code=$(curl -sS -L -o /dev/null -w '%{http_code}' --max-time 20 "$repo/$path" || echo "ERR")
+              echo "$code  $repo/$path"
+            done
+          done
