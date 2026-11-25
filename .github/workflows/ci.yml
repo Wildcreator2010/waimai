@@ -66,8 +66,8 @@ jobs:
           packages: platform-tools
       - run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
       - run: chmod +x android/gradlew
-      # Hilt 使用 KAPT；CI 不复用共享构建缓存，避免跨运行缓存干扰
-      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -Pkotlin.incremental=false
+      # 串行执行：避免 KSP/Hilt 与资源生成任务在低配 Runner 上并发导致符号解析失败
+      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache --no-parallel -Pkotlin.incremental=false
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:
