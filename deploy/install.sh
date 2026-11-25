@@ -106,6 +106,11 @@ set_env APP_NAME "$(env_get APP_NAME 取餐提醒)"
 case "$(env_get VITE_APP_NAME)" in
   "" | 取餐提醒) set_env VITE_APP_NAME "$(env_get APP_NAME 取餐提醒)" ;;
 esac
+case "$(env_get SMTP_FROM)" in
+  "" | 取餐提醒* | *no-reply@example.com)
+    set_env SMTP_FROM "$(env_get APP_NAME 取餐提醒) <no-reply@$domain>"
+    ;;
+esac
 case "$(env_get WEBPUSH_SUBJECT)" in
   "" | *example.com*) set_env WEBPUSH_SUBJECT "mailto:admin@$domain" ;;
 esac

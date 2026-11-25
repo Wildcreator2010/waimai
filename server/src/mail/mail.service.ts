@@ -16,7 +16,9 @@ export class MailService {
 
   constructor(config: ConfigService) {
     this.appName = config.get<string>('APP_NAME', '取餐提醒') || '取餐提醒';
-    this.from = config.get<string>('SMTP_FROM', '') || `${this.appName} <no-reply@example.com>`;
+    // 未显式配置发件人时，用 APP_BASE_URL 的域名生成，避免把 example.com 带到线上
+    const mailHost = hostnameOf(config.get<string>('APP_BASE_URL', '')) || 'example.com';
+    this.from = config.get<string>('SMTP_FROM', '') || `${this.appName} <no-reply@${mailHost}>`;
     this.dryRun = config.get<boolean>('MAIL_DRY_RUN', true);
     const host = config.get<string>('SMTP_HOST', '');
     if (!this.dryRun && host) {
@@ -79,5 +81,13 @@ export class MailService {
 
   async sendAdminAlert(to: string, title: string, body: string): Promise<void> {
     await this.send(to, `[${this.appName}·告警] ${title}`, body);
+  }
+}
+
+function hostnameOf(value: string): string {
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return '';
   }
 }

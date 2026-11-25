@@ -109,9 +109,10 @@ const mailDryRun = get('MAIL_DRY_RUN').toLowerCase() === 'true';
 if (mailDryRun) {
   warn('MAIL_DRY_RUN=true：不会真发邮件，注册验证链接只写日志（上线前改 false）');
 } else {
-  for (const key of ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM']) {
+  for (const key of ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS']) {
     if (!get(key)) fail(`${key} 未填（MAIL_DRY_RUN=false 时必须配齐 SMTP）`);
   }
+  // SMTP_FROM 可留空：服务端会用 APP_NAME 自动生成
   if (get('SMTP_FROM') && !get('SMTP_FROM').includes('@')) fail('SMTP_FROM 不像邮箱地址');
   if (!problems.some((p) => p.startsWith('SMTP'))) ok('SMTP 配置齐全');
 }

@@ -71,7 +71,8 @@ export const envSchema = z.object({
   SMTP_SECURE: bool(true),
   SMTP_USER: optional,
   SMTP_PASS: optional,
-  SMTP_FROM: z.string().default('取餐提醒 <no-reply@example.com>'),
+  /** 留空时由 MailService 用 APP_NAME 生成「品牌名 <no-reply@example.com>」 */
+  SMTP_FROM: optional,
   MAIL_DRY_RUN: bool(true),
 
   FIREBASE_SERVICE_ACCOUNT_PATH: optional,

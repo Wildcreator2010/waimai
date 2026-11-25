@@ -52,12 +52,10 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-for cmd in git docker; do
-  command -v "$cmd" >/dev/null 2>&1 || {
-    echo "缺少命令：$cmd。请先安装 Docker Engine 与 git。" >&2
-    exit 1
-  }
-done
+command -v docker >/dev/null 2>&1 || {
+  echo "缺少 docker。请先安装 Docker Engine 与 Docker Compose v2。" >&2
+  exit 1
+}
 
 # 情况一：直接执行仓库里的脚本 → 把参数交给 install.sh
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || true)"
@@ -69,6 +67,10 @@ fi
 if [ -d "$INSTALL_DIR/.git" ]; then
   echo "使用已有代码目录：$INSTALL_DIR"
 else
+  command -v git >/dev/null 2>&1 || {
+    echo "缺少 git。请先安装 git，或把仓库克隆到 $INSTALL_DIR 后重新执行。" >&2
+    exit 1
+  }
   mkdir -p "$(dirname "$INSTALL_DIR")"
   echo "克隆仓库到 $INSTALL_DIR"
   if [ -n "$BRANCH" ]; then
