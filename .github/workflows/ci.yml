@@ -65,10 +65,9 @@ jobs:
           # 默认还会装已下架的 'tools' 包，导致 CI 失败；只保留 platform-tools
           packages: platform-tools
       - run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
-      - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x android/gradlew
-      # 禁用共享构建缓存并先 clean：避免跨平台缓存导致 KSP/Hilt 解析到不完整产物
-      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache
+      # 不使用 setup-gradle 的共享缓存：CI 上缓存的依赖元数据曾导致 KSP 解析失败
+      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -Pkotlin.incremental=false
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:
