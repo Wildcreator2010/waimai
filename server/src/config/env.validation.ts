@@ -22,6 +22,13 @@ const optional = z
   .optional()
   .transform((v) => (v === undefined || v === '' ? '' : v));
 
+/** 展示名称：空串按未设置处理，避免 compose 传空变量时清空品牌名。 */
+const name = (def: string) =>
+  z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined || v.trim() === '' ? def : v.trim()));
+
 /** 带默认值的枚举：空字符串按未设置处理（compose 传空串是常见情况）。 */
 const enumWithDefault = <T extends [string, ...string[]]>(values: T, fallback: T[number]) =>
   z.preprocess(
@@ -31,6 +38,8 @@ const enumWithDefault = <T extends [string, ...string[]]>(values: T, fallback: T
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  /** 产品名：用于邮件标题、告警与前端标题，可替换成自己的品牌 */
+  APP_NAME: name('取餐提醒'),
   PORT: int(8787, 1, 65535),
   APP_BASE_URL: z.string().default('http://127.0.0.1:5173'),
   TZ: z.string().default('Asia/Shanghai'),

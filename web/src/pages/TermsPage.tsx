@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/Card';
 import { PageHeader } from '@/components/PageHeader';
+import { APP_NAME } from '@/lib/brand';
 
 const UPDATED_AT = '2026-11-12';
 const VERSION = '2026-11-12';
@@ -20,7 +21,7 @@ export function TermsPage() {
       <Card className="prose prose-slate max-w-none text-sm leading-7">
         <h2 className="text-base font-semibold text-slate-900">一、服务说明</h2>
         <p>
-          「取餐提醒」通过服务端按固定间隔查询取餐柜开放接口，在你设置的取餐码出现入柜记录时，
+          「{APP_NAME}」通过服务端按固定间隔查询取餐柜开放接口，在你设置的取餐码出现入柜记录时，
           通过应用推送、ntfy 推送与短信三种方式提醒你取餐。本服务仅提供信息提醒，
           <strong>不代你下单、不代你取餐、不保证取餐柜运营方的任何服务</strong>。
         </p>

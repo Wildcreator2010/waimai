@@ -10,11 +10,13 @@ import { createTransport, type Transporter } from 'nodemailer';
 export class MailService {
   private readonly logger = new Logger('Mail');
   private readonly transporter: Transporter | null;
+  private readonly appName: string;
   private readonly from: string;
   private readonly dryRun: boolean;
 
   constructor(config: ConfigService) {
-    this.from = config.get<string>('SMTP_FROM', '取餐提醒 <no-reply@example.com>');
+    this.appName = config.get<string>('APP_NAME', '取餐提醒') || '取餐提醒';
+    this.from = config.get<string>('SMTP_FROM', '') || `${this.appName} <no-reply@example.com>`;
     this.dryRun = config.get<boolean>('MAIL_DRY_RUN', true);
     const host = config.get<string>('SMTP_HOST', '');
     if (!this.dryRun && host) {
@@ -46,7 +48,7 @@ export class MailService {
   async sendVerifyEmail(to: string, link: string): Promise<void> {
     await this.send(
       to,
-      '验证你的取餐提醒邮箱',
+      `验证你的${this.appName}邮箱`,
       [
         '你好，',
         '',
@@ -62,7 +64,7 @@ export class MailService {
   async sendResetEmail(to: string, link: string): Promise<void> {
     await this.send(
       to,
-      '重置你的取餐提醒密码',
+      `重置你的${this.appName}密码`,
       [
         '你好，',
         '',
@@ -76,6 +78,6 @@ export class MailService {
   }
 
   async sendAdminAlert(to: string, title: string, body: string): Promise<void> {
-    await this.send(to, `[取餐提醒·告警] ${title}`, body);
+    await this.send(to, `[${this.appName}·告警] ${title}`, body);
   }
 }

@@ -43,6 +43,9 @@ fun quoted(value: String): String {
 }
 
 val apiBaseUrl = localValue("API_BASE_URL", "https://meal.example.com/")
+// 品牌与包名：不填时用默认值；换品牌只需改 local.properties，不必改源码
+val appName = localValue("APP_NAME", "取餐提醒")
+val appApplicationId = localValue("APP_APPLICATION_ID", "com.wildcreator.mealreminder")
 val fcmProjectId = localValue("FCM_PROJECT_ID")
 val fcmAppId = localValue("FCM_APP_ID")
 val fcmApiKey = localValue("FCM_API_KEY")
@@ -53,7 +56,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.wildcreator.mealreminder"
+        applicationId = appApplicationId
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -62,6 +65,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // 应用名（桌面图标与系统设置里显示）
+        resValue("string", "app_name", appName)
 
         // 服务端地址（必须带结尾斜杠）
         buildConfigField("String", "API_BASE_URL", quoted(apiBaseUrl))

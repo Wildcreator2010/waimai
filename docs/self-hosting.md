@@ -3,6 +3,23 @@
 本文假设你拿到的是这个仓库的一份拷贝，目标是在自己的服务器上跑起完整服务。
 所有示例域名都使用 `meal.example.com` / `ntfy.meal.example.com`，替换成你自己的即可。
 
+## 最快路径（一行命令）
+
+服务器已安装 Docker 与 git 时：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Wildcreator2010/waimai/master/deploy/quickstart.sh \
+  | sudo bash -s -- --domain=meal.example.com
+```
+
+等价于「克隆仓库 + 生成密钥 + 构建镜像 + 启动 + 健康检查」，最后打印初始化引导码。
+需要自定义拓扑或已有镜像时，把参数继续往后传，例如：
+
+```bash
+curl -fsSL .../quickstart.sh | sudo bash -s -- \
+  --domain=meal.example.com --topology=external --image-tar=server-image.tar
+```
+
 ## 0. 你需要准备
 
 | 项 | 说明 |
@@ -12,7 +29,8 @@
 | 端口 | 80 / 443。若已被宝塔等 nginx 占用，走「方式 B」 |
 | 可选凭据 | SMTP、阿里云短信 AK/签名/模板、Firebase 服务账号 |
 
-本地需要 Node.js >= 20（`npm run doctor` 会检查）。Windows 上执行离线镜像构建（`npm run image`）需要 Git Bash 或 WSL；联网环境可以直接用 `server/Dockerfile.online`。
+服务器只需要 Docker 与 git；下面的 `npm run ...` 是可选的本机辅助命令，需要 Node.js >= 20（`npm run doctor` 会检查）。
+Windows 上执行离线镜像构建（`npm run image`）需要 Git Bash 或 WSL；默认的联网多阶段构建使用 `server/Dockerfile.online`，不需要本机 Node。
 
 ## 1. 拿到代码并自检
 
@@ -171,11 +189,21 @@ npm run release                # 只生成单文件发布包
 
 ## 9. 换品牌（可选）
 
-- Web 标题：`web/index.html` 的 `<title>` 与 `web/src/components/AppLayout.tsx` 里的品牌名
-- Android 应用名：`android/app/src/main/res/values/strings.xml` 的 `app_name`
-- Android 包名：`android/app/build.gradle.kts` 的 `applicationId` / `namespace`，以及 Kotlin 源码目录；改包名后 FCM 的 `google-services.json` 必须重新生成
-- 默认站点地址：`android/local.properties` 与 `desktop` 的 `MEAL_APP_URL`
+品牌名已经做成配置项，不需要改源码：
+
+```ini
+# deploy/.env
+APP_NAME=取餐提醒        # 服务端邮件标题、告警
+VITE_APP_NAME=取餐提醒   # Web 页面标题、Logo 文案（install.sh 会自动同步 APP_NAME）
+```
+
+- Android 应用名 / 包名：`android/local.properties` 的 `APP_NAME` 与 `APP_APPLICATION_ID`
+  （改包名后 FCM 的 `google-services.json` 必须重新生成；`namespace` 与 Kotlin 源码目录仍沿用 `com.wildcreator.mealreminder`）
+- 默认站点地址：`android/local.properties` 的 `API_BASE_URL`，或运行期在登录页修改；
+  桌面端用 `MEAL_APP_URL`，或首次运行在设置窗口里填
+- 桌面端安装包名称：`desktop/electron-builder.yml` 的 `productName` / `appId`
 - 短信签名与模板：阿里云控制台申请后填入 `.env`，不要复用他人的签名
+- 取餐柜供应商：默认协议适配 `server/src/locker/locker.client.ts`，换供应商需同步调整接口路径与字段映射
 
 ## 10. 常见问题
 

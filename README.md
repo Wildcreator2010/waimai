@@ -1,5 +1,8 @@
 # 取餐提醒（Meal Reminder）
 
+[![CI](https://github.com/Wildcreator2010/waimai/actions/workflows/ci.yml/badge.svg)](https://github.com/Wildcreator2010/waimai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 外卖入柜后，自动通过 **FCM / ntfy / 浏览器 Web Push / 阿里云短信** 四条通道提醒你去取餐，
 并在任务详情页提供**一键开箱**。
 
@@ -9,8 +12,28 @@
 - 电脑版：Electron 复用 Web 站点（托盘常驻、系统通知）
 - 部署：Docker Compose（Caddy 自动 HTTPS，或复用已有 nginx/宝塔），ntfy 使用独立子域
 
-> 本仓库自带可复刻的部署套件：`npm run env:init` 生成密钥与配置，`deploy/install.sh` 一键安装，
-> 支持 Caddy 全自动 HTTPS 与「已有 nginx/宝塔」两种拓扑。见 [docs/self-hosting.md](docs/self-hosting.md)。
+开源、可自托管、不绑定任何域名或第三方账号：品牌名、域名、取餐柜接口、短信/邮件/推送通道全部可配置。
+采用 [MIT License](LICENSE)。
+
+## 一键部署
+
+一台 Linux 服务器（1 核 2G 起，已安装 Docker 与 git），两条 DNS A 记录（主域 + `ntfy.` 子域）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Wildcreator2010/waimai/master/deploy/quickstart.sh \
+  | sudo bash -s -- --domain=meal.example.com
+```
+
+脚本会克隆仓库、生成密钥、构建并启动 db / ntfy / server / web / caddy，最后打印初始化引导码。
+打开 `https://meal.example.com/setup` 用引导码创建 ROOT 即可。
+
+不填任何第三方凭据也能先跑通：首次安装默认 `LOCKER_MOCK=true`、`MAIL_DRY_RUN=true`、`ALIYUN_DRY_RUN=true`。
+安装细节与「已有 nginx/宝塔」拓扑见 [docs/self-hosting.md](docs/self-hosting.md)。
+
+## 界面
+
+![登录](docs/screenshots/01-login.png)
+![任务列表](docs/screenshots/02-reminders.png)
 
 ## 功能
 
@@ -48,6 +71,8 @@
 | [docs/firebase-setup.md](docs/firebase-setup.md) | 10 分钟拿到 FCM 凭据 |
 | [docs/aliyun-sms-setup.md](docs/aliyun-sms-setup.md) | 短信配置 |
 | [docs/acceptance.md](docs/acceptance.md) | 验收步骤 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 开发、提交与自检约定 |
+| [SECURITY.md](SECURITY.md) | 漏洞报告与部署安全清单 |
 | [server/prisma/schema.prisma](server/prisma/schema.prisma) | 数据模型（唯一事实来源） |
 
 ## 现状
@@ -55,12 +80,12 @@
 | 模块 | 状态 | 验证方式 |
 |---|---|---|
 | 服务端 | 完成 | `npm run build` 通过；**54 单测**、**31 e2e** 全绿（真实 Postgres + 迁移 + mock 取餐柜） |
-| Web | 完成 | `tsc` 零错误；线上已部署并逐页验证 |
+| Web | 完成 | `tsc` 零错误；已逐页验证 |
 | Android | 完成 | `assembleDebug` 通过，产出 `app-debug.apk`；未在真机长期运行 |
-| 电脑版（Electron） | 已实现 | 代码在 `desktop/`，本轮未重新验证 |
-| 部署 | 完成 | 线上 healthy，每日备份 cron，证书自动续期 |
+| 电脑版（Electron） | 已实现 | 代码在 `desktop/` |
+| 部署 | 完成 | Docker Compose 部署 healthy，备份脚本与证书自动续期已配置 |
 
-### 线上已实测通过的链路
+### 端到端已实测的链路
 
 引导码创建 ROOT → 邀请码 → 注册（人机验证 + 协议）→ 邮箱验证（真实 SMTP 送达）
 → 登录 → JWT refresh 轮换 → 建任务 → 首次基线 → 命中入柜
@@ -113,6 +138,15 @@ cd ../web && npm run dev                                 # http://localhost:5173
 
 ## 一键部署 / 再部署
 
+最简方式（服务器只需 Docker + git，见文首）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Wildcreator2010/waimai/master/deploy/quickstart.sh \
+  | sudo bash -s -- --domain=meal.example.com
+```
+
+需要先在本机检查配置时：
+
 ```bash
 npm run doctor
 npm run env:init -- --domain=meal.example.com
@@ -133,9 +167,15 @@ npm run release                   # 只生成单文件发布包
 - 升级、回滚、备份、恢复：`deploy/upgrade.sh`、`deploy/backup.sh`、`deploy/restore.sh`
 - 完整步骤见 [docs/self-hosting.md](docs/self-hosting.md)，日常运维见 [docs/operations.md](docs/operations.md)
 
-## 换成你自己的服务器（开源部署）
+## 换成你自己的域名 / 品牌（开源部署）
 
-三个客户端都**不写死**域名，别人可以指向自己的部署：
+所有客户端都**不写死**域名与品牌，可指向自己的部署：
+
+**品牌**
+- 服务端：`APP_NAME`（邮件标题、告警、Web 推送）
+- Web：构建时 `VITE_APP_NAME`（页面标题、Logo 文案）；Docker 部署由 `deploy/install.sh` 自动同步 `APP_NAME`
+- Android：`android/local.properties` 的 `APP_NAME` 与 `APP_APPLICATION_ID`
+- 桌面端：`desktop/electron-builder.yml` 的 `productName` / `appId`
 
 **Android**（运行时可改，无需重新编译）
 - 登录页底部「服务器：…（点击修改）」或设置页「服务器地址」
@@ -155,10 +195,17 @@ npm run release                   # 只生成单文件发布包
 - 域名只出现在 `deploy/` 下的 nginx 配置与部署脚本里，替换成你的域名即可
 - `.env` 里要改的是 `APP_BASE_URL`（用于邮件里的链接）与 `NTFY_PUBLIC_URL`
 
-## 构建与部署（重要：构建机网络受限）
+## 构建与部署
 
-本机 Docker 容器**无法访问外网**（DNS 正常但 TCP 被拦），因此镜像构建时不能在容器里 `npm ci`。
-依赖与 Prisma 引擎全部在宿主机准备，镜像只做拷贝：
+默认使用联网多阶段构建（`server/Dockerfile.online`），服务器不需要预装 Node：
+
+```bash
+docker build -f server/Dockerfile.online -t meal-reminder-server:prod server
+```
+
+`deploy/install.sh` 与 `deploy/quickstart.sh` 会自动完成镜像构建与启动。
+
+构建机**无法访问外网**时，改用离线流程（依赖与 Prisma 引擎在宿主机准备，镜像只做拷贝）：
 
 ```bash
 npm run image                    # 等价于下面三步 + docker save
@@ -167,13 +214,7 @@ bash scripts/prepare-image.sh    # 编译 dist + 装生产依赖 + 生成 Prisma
 docker build --build-arg NODE_IMAGE=docker.m.daocloud.io/library/node:22-alpine \
   -t meal-reminder-server:prod server
 docker save meal-reminder-server:prod -o server-image.tar   # 传到服务器后 docker load
-```
-
-构建机可以联网时，用多阶段 Dockerfile 更简单：
-
-```bash
-docker build -f server/Dockerfile.online -t meal-reminder-server:prod server
-# 或在 deploy/.env 里设置 SERVER_DOCKERFILE=Dockerfile.online
+# 并在 deploy/.env 里设置 SERVER_DOCKERFILE=Dockerfile
 ```
 
 服务器侧：部署目录下放 `deploy/`，容器只监听 `127.0.0.1:8787`（external 拓扑），
@@ -186,6 +227,7 @@ docker build -f server/Dockerfile.online -t meal-reminder-server:prod server
 
 | 变量 | 说明 |
 |---|---|
+| `APP_NAME` / `VITE_APP_NAME` | 服务端与 Web 的品牌名（邮件标题、页面标题） |
 | `DATABASE_URL` | PostgreSQL 连接串 |
 | `JWT_SECRET` / `MEMBER_TOKEN_ENC_KEY` | 令牌签名 / 凭证加密（base64 32 字节） |
 | `LOCKER_MOCK` | `true` 用模拟取餐柜；线上为 `false`（真实查询） |
@@ -195,7 +237,7 @@ docker build -f server/Dockerfile.online -t meal-reminder-server:prod server
 | `WEBPUSH_PUBLIC_KEY` / `WEBPUSH_PRIVATE_KEY` / `WEBPUSH_SUBJECT` | 浏览器推送（VAPID，自签名即可） |
 | `CAPTCHA_PROVIDER` | `builtin`（默认）/ `turnstile` / `off` |
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET` | 切 Turnstile 时需要 |
-| `FIREBASE_SERVICE_ACCOUNT_PATH` | FCM 服务账号路径；为空则全部设备走 ntfy |
+| `FIREBASE_SERVICE_ACCOUNT_PATH` / `FIREBASE_SERVICE_ACCOUNT_JSON` | FCM 服务账号（路径或内联 JSON，二选一）；为空则全部设备走 ntfy |
 
 生成 VAPID 密钥：`npx web-push generate-vapid-keys`
 
@@ -230,6 +272,9 @@ FCM 可选，`google-services.json` 放进 `android/app/` 即自动启用插件�
 - 同一柜机 + 同一取餐码连续两单，指纹相同，第二次不会提醒
 - 阿里云单号码短信 20 条/天（服务商硬限制）
 - FCM 需自备 Firebase 项目与凭据
+- 取餐柜客户端默认适配 `LOCKER_API_BASE` 指向的供应商协议（`server/src/locker/locker.client.ts`）；
+  换供应商需要调整接口路径与响应字段映射
+- 本服务依赖第三方取餐柜接口，接口变更可能导致查询失败；请同时留意外卖平台自身的通知
 
 ## 版本与 CI
 
@@ -237,6 +282,11 @@ FCM 可选，`google-services.json` 放进 `android/app/` 即自动启用插件�
 - 变更记录：[CHANGELOG.md](CHANGELOG.md)
 - CI：`.github/workflows/ci.yml`（版本一致性、服务端单测与构建、Web 构建、Android debug、服务端镜像）
 
+## 参与贡献
+
+欢迎提交 Issue / PR。开发环境、提交前自检与编码约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+安全问题请按 [SECURITY.md](SECURITY.md) 私密报告。
+
 ## 许可
 
-私有项目，未授权不得分发。
+本项目以 [MIT License](LICENSE) 开源，可自由使用、修改、分发与商用，请保留版权声明。

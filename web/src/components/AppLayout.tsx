@@ -8,6 +8,7 @@ import { Button } from '@/components/Button';
 import { RoleBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { useMeSettings, useNtfyConfig } from '@/hooks/useMe';
+import { APP_INITIAL, APP_NAME } from '@/lib/brand';
 import { getDesktop } from '@/lib/desktop';
 import { cn } from '@/lib/utils';
 
@@ -75,9 +76,9 @@ export function AppLayout() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
           <Link to="/reminders" className="flex items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-600 text-sm font-bold text-white">
-              取
+              {APP_INITIAL}
             </span>
-            <span className="text-base font-semibold text-slate-900">取餐提醒</span>
+            <span className="text-base font-semibold text-slate-900">{APP_NAME}</span>
           </Link>
 
           <div className="flex min-w-0 items-center gap-2">

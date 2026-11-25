@@ -1,6 +1,6 @@
 appId: com.mealreminder.desktop
 productName: 取餐提醒
-copyright: Copyright © 2026 Meal Reminder
+copyright: Copyright © 2026 Meal Reminder contributors
 
 directories:
   output: release

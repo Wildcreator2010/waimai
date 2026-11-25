@@ -23,11 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wildcreator.mealreminder.R
 import com.wildcreator.mealreminder.ui.common.ErrorBanner
 import com.wildcreator.mealreminder.ui.common.HintText
 import com.wildcreator.mealreminder.ui.common.InfoBanner
@@ -153,7 +155,7 @@ fun PhoneBindScreen(
             }
 
             Text(
-                text = "手机号仅用于发送取餐提醒短信，展示时始终掩码（如 138****8000）。",
+                text = "手机号仅用于发送${stringResource(R.string.app_name)}短信，展示时始终掩码（如 138****8000）。",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

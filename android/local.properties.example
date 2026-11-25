@@ -5,6 +5,13 @@ sdk.dir=C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
 # 服务端地址，必须带结尾斜杠
 API_BASE_URL=https://meal.example.com/
 
+# ---- 品牌（可选）----
+# 桌面图标与系统设置里显示的名称
+APP_NAME=取餐提醒
+# 应用包名；改成自己的域名反写（如 com.yourcompany.mealreminder）。
+# 注意：包名与 FCM 的 google-services.json 绑定，改后需重新生成该文件。
+APP_APPLICATION_ID=com.wildcreator.mealreminder
+
 # ---- FCM（可选）----
 # 优先方式：把 google-services.json 放到 android/app/，构建脚本会自动启用插件，下面四项无需填写。
 # 备用方式：不想用插件时填这四项（值可从 google-services.json 里取，或用 scripts/check-fcm-config.mjs 打印）。

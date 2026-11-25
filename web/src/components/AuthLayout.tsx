@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { APP_INITIAL, APP_NAME } from '@/lib/brand';
 
 export interface AuthLayoutProps {
   title: string;
@@ -14,9 +15,9 @@ export function AuthLayout({ title, description, children, footer }: AuthLayoutP
       <div className="w-full max-w-md">
         <div className="mb-4 flex items-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-600 text-sm font-bold text-white">
-            取
+            {APP_INITIAL}
           </span>
-          <span className="text-lg font-semibold text-slate-900">取餐提醒</span>
+          <span className="text-lg font-semibold text-slate-900">{APP_NAME}</span>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card sm:p-6">

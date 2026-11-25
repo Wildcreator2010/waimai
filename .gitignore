@@ -54,6 +54,7 @@ android/app/release/
 
 # 本地临时验证产物（截图、一次性脚本、浏览器 profile）
 .tmp/
+.screenshots/
 
 # Electron 桌面端本地产物
 desktop/release/

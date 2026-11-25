@@ -3,9 +3,12 @@
 #   docker build --build-arg NODE_IMAGE=... --build-arg NGINX_IMAGE=... .
 ARG NODE_IMAGE=node:22-alpine
 ARG NGINX_IMAGE=nginx:1.27-alpine
+# 品牌名在构建时注入（Vite 只读取 VITE_ 前缀变量）
+ARG VITE_APP_NAME=取餐提醒
 
 FROM ${NODE_IMAGE} AS build
 WORKDIR /app
+ENV VITE_APP_NAME=${VITE_APP_NAME}
 COPY package.json package-lock.json* .npmrc* ./
 RUN npm ci --no-audit --no-fund
 COPY . .

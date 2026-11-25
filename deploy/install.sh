@@ -101,6 +101,15 @@ if [ -n "$DOMAIN_ARG" ] && [ "$old_domain" != "$domain" ]; then
   set_env NTFY_STATIC_ROOT "/var/www/$ntfy_domain"
 fi
 
+# ------------------------------------------------------------------ 品牌
+set_env APP_NAME "$(env_get APP_NAME 取餐提醒)"
+case "$(env_get VITE_APP_NAME)" in
+  "" | 取餐提醒) set_env VITE_APP_NAME "$(env_get APP_NAME 取餐提醒)" ;;
+esac
+case "$(env_get WEBPUSH_SUBJECT)" in
+  "" | *example.com*) set_env WEBPUSH_SUBJECT "mailto:admin@$domain" ;;
+esac
+
 # ------------------------------------------------------------------ 密钥
 jwt="$(env_get JWT_SECRET)"
 need_openssl=0
@@ -152,6 +161,15 @@ case "$topology" in
 esac
 set_env DEPLOY_TOPOLOGY "$topology"
 log "部署拓扑：$topology"
+
+# 默认在线多阶段构建；如果 .env 仍指向离线 Dockerfile 但本机没有离线产物，自动切换
+if [ "$topology" = "caddy" ] && [ "$NO_BUILD" = "0" ]; then
+  dockerfile="$(env_get SERVER_DOCKERFILE Dockerfile.online)"
+  if [ "$dockerfile" = "Dockerfile" ] && [ ! -d "$DEPLOY_DIR/../server/.image-deps/node_modules" ]; then
+    warn '未检测到离线构建产物 server/.image-deps，自动改用 Dockerfile.online（需要联网）'
+    set_env SERVER_DOCKERFILE Dockerfile.online
+  fi
+fi
 
 server_image="$(env_get SERVER_IMAGE 'meal-reminder-server:prod')"
 compose_file="$(deploy_file "$topology")"

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Text } from '@fluentui/react-components';
 import { Card, CardHeader } from '@/components/Card';
 import { Switch } from '@/components/Form';
+import { APP_NAME } from '@/lib/brand';
 import { getDesktop } from '@/lib/desktop';
 
 export function DesktopSettingsCard() {
@@ -55,7 +56,7 @@ export function DesktopSettingsCard() {
     <Card>
       <CardHeader
         title="桌面端"
-        description={`取餐提醒桌面客户端 ${desktop.appVersion} · ${desktop.platform}`}
+        description={`${APP_NAME}桌面客户端 ${desktop.appVersion} · ${desktop.platform}`}
       />
       <div className="space-y-4">
         <Switch

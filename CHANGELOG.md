@@ -4,6 +4,15 @@
 
 ## 未发布
 
+### 开源与可复用
+
+- 仓库改为 MIT License，新增 `LICENSE`、`SECURITY.md`、`CONTRIBUTING.md`。
+- 品牌名可配置：服务端 `APP_NAME`、Web `VITE_APP_NAME`、Android `APP_NAME` / `APP_APPLICATION_ID`。
+- 补齐 compose 中缺失的 `FIREBASE_SERVICE_ACCOUNT_JSON`，并将 `APP_NAME` / `VITE_APP_NAME` 传入容器与 Web 构建。
+- 默认使用联网多阶段构建 `Dockerfile.online`，新增 `deploy/quickstart.sh` 一行命令部署。
+- 新增 `Dockerfile.online.dockerignore` / `Dockerfile.dockerignore`，缩短镜像构建上下文。
+- 移除仅面向作者的 `docs/what-i-need.md`，换品牌与供应商适配说明并入 `docs/self-hosting.md`。
+
 ### 配置与再部署
 
 - 新增 `deploy/config.sh`：菜单式修改 `.env`，支持 `--show`（密钥只显示长度）、`--set KEY=VALUE`、`--validate` 与重建 server。

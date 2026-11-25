@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">取餐提醒</string>
+    <!-- app_name 由 app/build.gradle.kts 的 resValue 注入（local.properties: APP_NAME） -->
 
     <!-- 通知渠道 -->
     <string name="channel_arrived">到柜提醒</string>

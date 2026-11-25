@@ -7,7 +7,14 @@
 | `caddy` | `docker-compose.yml` | 80/443 空闲，Caddy 自动 HTTPS，web 容器托管前端 |
 | `external` | `docker-compose.server.yml` | 80/443 已被 nginx / 宝塔占用，容器只监听 127.0.0.1 |
 
-推荐流程（脚本会自动识别拓扑）：
+最简流程（服务器只需 Docker + git）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Wildcreator2010/waimai/master/deploy/quickstart.sh \
+  | sudo bash -s -- --domain=meal.example.com
+```
+
+需要先在本机生成并检查配置时：
 
 ```bash
 npm run env:init -- --domain=meal.example.com   # 生成密钥与 deploy/.env
@@ -15,6 +22,9 @@ npm run config                                  # 菜单式补 SMTP / 短信等�
 npm run deploy:check
 sudo bash deploy/install.sh
 ```
+
+`install.sh` 默认使用 `server/Dockerfile.online` 在服务器上联网构建；离线构建时在 `.env` 里改回
+`SERVER_DOCKERFILE=Dockerfile`，并先执行 `bash scripts/prepare-image.sh`。
 
 ## 1. 前置
 
@@ -220,6 +230,7 @@ DEPLOY_SSH_KEY=C:/Users/你/.ssh/你的密钥
 
 | 脚本 | 作用 |
 |---|---|
+| `quickstart.sh` | 一行命令：克隆仓库（可选）+ 调用 install.sh |
 | `install.sh` | 幂等安装：补齐密钥、识别拓扑、启动、健康检查、打印引导码 |
 | `config.sh` | 菜单式修改 `.env`；`--show/--set/--validate` |
 | `upgrade.sh` | 备份 → 保留上一版镜像 → 导入/构建 → 重建 → 健康检查 |

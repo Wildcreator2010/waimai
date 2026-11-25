@@ -4,8 +4,8 @@
   "private": true,
   "description": "取餐提醒 · Electron 桌面客户端（复用 web 站点）",
   "main": "dist/main.js",
-  "author": "Meal Reminder",
-  "license": "UNLICENSED",
+  "author": "Meal Reminder contributors",
+  "license": "MIT",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "electron .",

@@ -62,6 +62,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      APP_NAME: ${APP_NAME:-取餐提醒}
       NODE_OPTIONS: --max-old-space-size=192
       TZ: ${TZ}
       PORT: 8787
@@ -88,7 +89,8 @@ services:
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
       MAIL_DRY_RUN: ${MAIL_DRY_RUN}
-      FIREBASE_SERVICE_ACCOUNT_PATH: ${FIREBASE_SERVICE_ACCOUNT_PATH}
+      FIREBASE_SERVICE_ACCOUNT_PATH: ${FIREBASE_SERVICE_ACCOUNT_PATH:-}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON:-}
       NTFY_SERVER_URL: ${NTFY_SERVER_URL}
       NTFY_PUBLIC_URL: ${NTFY_PUBLIC_URL}
       NTFY_BASE_URL: ${NTFY_BASE_URL}

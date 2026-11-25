@@ -29,9 +29,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wildcreator.mealreminder.R
 import com.wildcreator.mealreminder.data.remote.dto.ReminderDto
 import com.wildcreator.mealreminder.domain.ReminderStatus
 import com.wildcreator.mealreminder.ui.common.EmptyState
@@ -60,7 +62,7 @@ fun ReminderListScreen(
     }
 
     ScreenScaffold(
-        title = "取餐提醒",
+        title = stringResource(R.string.app_name),
         actions = {
             TextButton(onClick = viewModel::load) { Text("刷新") }
         },

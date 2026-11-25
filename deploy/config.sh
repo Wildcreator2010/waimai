@@ -139,6 +139,15 @@ edit_locker() {
   ask MOCK_ARRIVAL_AFTER 'mock 第几次查询模拟入柜'
 }
 
+edit_brand() {
+  ask APP_NAME '服务端品牌名（邮件标题、告警）'
+  ask VITE_APP_NAME 'Web 品牌名（页面标题、Logo）'
+  if [ -z "$(env_get VITE_APP_NAME)" ]; then
+    set_env VITE_APP_NAME "$(env_get APP_NAME 取餐提醒)"
+  fi
+  warn 'Web 品牌名在构建时注入：需重新执行 docker compose build web 并重建 web 容器'
+}
+
 edit_webpush() {
   ask WEBPUSH_PUBLIC_KEY 'VAPID 公钥'
   ask_secret WEBPUSH_PRIVATE_KEY 'VAPID 私钥'
@@ -221,6 +230,7 @@ main_menu() {
   8) 远程再部署（DEPLOY_HOST 等）
   9) 校验配置
  10) 重建 server 加载配置
+ 11) 品牌名称（APP_NAME / VITE_APP_NAME）
   0) 退出
 ==========================================
 EOF
@@ -236,6 +246,7 @@ EOF
       8) edit_remote ;;
       9) validate_config || true ;;
       10) restart_server ;;
+      11) edit_brand ;;
       0 | q | Q) return 0 ;;
       *) warn '无效选择' ;;
     esac
