@@ -65,10 +65,12 @@ jobs:
           # 默认还会装已下架的 'tools' 包，导致 CI 失败；只保留 platform-tools
           packages: platform-tools
       - run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x android/gradlew
       # 关键修复：Kotlin 守护进程在干净 Runner 上会让 KSP/Hilt 解析不到项目内符号；
       # 改用进程内编译（与本地验证成功的回退路径一致），并 clean 避免缓存干扰。
-      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -Pkotlin.compiler.execution.strategy=in-process
+      # chinaMirrors=true：Runner 访问 Maven Central 偶发失败，用阿里云镜像保证插件可解析。
+      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -PchinaMirrors=true -Pkotlin.compiler.execution.strategy=in-process
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:
