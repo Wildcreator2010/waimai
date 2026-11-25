@@ -66,8 +66,8 @@ jobs:
           packages: platform-tools
       - run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
       - run: chmod +x android/gradlew
-      # 不使用 setup-gradle 的共享缓存：CI 上缓存的依赖元数据曾导致 KSP 解析失败
-      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -Pkotlin.incremental=false -Pksp.incremental=false
+      # Hilt 使用 KAPT；CI 不复用共享构建缓存，避免跨运行缓存干扰
+      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -Pkotlin.incremental=false
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:

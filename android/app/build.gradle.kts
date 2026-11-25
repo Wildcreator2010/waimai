@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.kapt)
     alias(libs.plugins.hilt)
 }
 
@@ -117,6 +117,11 @@ android {
     }
 }
 
+kapt {
+    // 允许注解处理器读取到带错误类型的符号，避免 Hilt 在增量/跨平台构建中报 NonExistentClass
+    correctErrorTypes = true
+}
+
 dependencies {
     // 核心与生命周期
     implementation(libs.androidx.core.ktx)
@@ -133,9 +138,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
 
-    // Hilt
+    // Hilt（用 KAPT：KSP 在 GitHub Linux Runner 上会解析不到项目内符号）
     implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    kapt(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
     // 网络
