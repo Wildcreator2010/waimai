@@ -67,7 +67,8 @@ jobs:
       - run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x android/gradlew
-      - run: ./gradlew assembleDebug --no-daemon
+      # 禁用共享构建缓存并先 clean：避免跨平台缓存导致 KSP/Hilt 解析到不完整产物
+      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:
