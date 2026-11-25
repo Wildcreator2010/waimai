@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 本机路径与凭据（含 API_BASE_URL / FCM_* 字段）
+local.properties
+
+# IDE
+.idea/
+*.iml
+.kotlin/
+
+# 构建产物
+*.apk
+*.aab
+app/release/
+captures/
+
+# Firebase 客户端配置（可选；按 docs/firebase-setup.md，拿到后可放入 app/）
+# 注意：仓库根 .gitignore 已忽略 google-services.json，若确需入库需改根规则。
+google-services.json

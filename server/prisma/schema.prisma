@@ -1,0 +1,360 @@
+// 取餐提醒 · 数据模型（唯一事实来源）
+// 说明：实体说明见 docs/architecture.md §4；改表结构必须先改这里再迁移。
+
+generator client {
+  provider = "prisma-client-js"
+  // native 用于本机（Windows），linux-musl 用于 alpine 容器镜像
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- 枚举
+
+/// ROOT 全局唯一、不可删除/降级，可转让；ADMIN 管账号但看不到他人任务；USER 只管自己。
+enum Role {
+  ROOT
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION // 已注册，邮箱未验证，禁止登录
+  ACTIVE
+  DISABLED
+}
+
+/// 提醒任务状态机：PENDING → BASELINE → WAITING → ARRIVED / TIMEOUT / STOPPED
+/// 查询异常不改变主状态，只累加 failCount 并写事件。
+enum ReminderStatus {
+  PENDING
+  BASELINE
+  WAITING
+  ARRIVED
+  TIMEOUT
+  STOPPED
+}
+
+enum EventLevel {
+  INFO
+  WARN
+  ERROR
+  SUCCESS
+}
+
+/// 设备推送方式：有 GMS 用 FCM，无 GMS 用 ntfy（App 主动 WebSocket 订阅）。
+enum PushMode {
+  FCM
+  NTFY
+}
+
+enum SmsStatus {
+  SENT
+  FAILED
+  SKIPPED // 触发日配额 / 未绑定手机 / 用户关闭短信
+}
+
+enum AlertLevel {
+  INFO
+  WARN
+  ERROR
+}
+
+/// 一次性令牌用途。库里只存 SHA-256(token)，明文只在邮件/响应中出现一次。
+enum TokenPurpose {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+  PHONE_VERIFY
+}
+
+// ---------------------------------------------------------------- 账号
+
+model User {
+  id                 String     @id @default(uuid())
+  email              String     @unique
+  /// PBKDF2-HMAC-SHA512 派生值（hex），迭代次数见 passwordIterations
+  passwordHash       String
+  passwordSalt       String
+  passwordIterations Int        @default(210000)
+  role               Role       @default(USER)
+  status             UserStatus @default(PENDING_VERIFICATION)
+  displayName        String     @default("")
+  emailVerifiedAt    DateTime?
+  /// E.164 或 11 位大陆手机号；未绑定为 null。全局唯一，防一号多账号。
+  phone              String?    @unique
+  phoneVerifiedAt    DateTime?
+  /// 通知内容是否显示柜号+取餐码；注册引导时告知，默认开
+  showNotifyDetails  Boolean    @default(true)
+  smsEnabled         Boolean    @default(true)
+  /// 无 GMS 设备或用户手动开启时置 true
+  ntfyEnabled        Boolean    @default(false)
+  /// 每用户一个不可猜随机 topic（32 hex），管理台可重置
+  ntfyTopic          String?    @unique
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  lastLoginAt        DateTime?
+  /// 会话版本：改密、停用、ROOT 转让时 +1，使已签发的 access token 立即失效
+  sessionVersion     Int        @default(0)
+  /// 用户协议同意时间与版本（注册时记录，条款更新后可要求重新同意）
+  termsAcceptedAt    DateTime?
+  termsVersion       String     @default("")
+
+  sessions        RefreshSession[]
+  tokens          VerificationToken[]
+  devices         Device[]
+  reminders       Reminder[]
+  invitesCreated  Invite[]            @relation("InviteCreator")
+  invitesUsed     Invite[]            @relation("InviteConsumer")
+  auditLogs       AuditLog[]
+  alertsAcked     AdminAlert[]        @relation("AlertAck")
+  smsLogs         SmsLog[]
+  credentialEdits LockerCredential[]  @relation("CredentialEditor")
+  webPushSubscriptions WebPushSubscription[]
+
+  @@index([role, status])
+}
+
+/// 可撤销 refresh token：只存 SHA-256，每次刷新轮换。
+model RefreshSession {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  userAgent  String    @default("")
+  ip         String    @default("")
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
+
+model VerificationToken {
+  id         String       @id @default(uuid())
+  userId     String
+  purpose    TokenPurpose
+  tokenHash  String       @unique
+  /// 附加信息：PHONE_VERIFY 时存待验证手机号
+  meta       String       @default("")
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+}
+
+/// 邀请码：一码一邮箱，绑定后不可改邮箱。
+model Invite {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  email       String
+  note        String    @default("")
+  createdById String
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  usedAt      DateTime?
+  usedById    String?
+
+  createdBy User  @relation("InviteCreator", fields: [createdById], references: [id])
+  usedBy    User? @relation("InviteConsumer", fields: [usedById], references: [id])
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+/// 推送设备：一个用户可多台；FCM token 失效时由服务端清理。
+model Device {
+  id         String   @id @default(uuid())
+  userId     String
+  name       String   @default("")
+  platform   String   @default("android")
+  pushMode   PushMode
+  fcmToken   String?  @unique
+  appVersion String   @default("")
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------- 提醒任务
+
+/// 任务三变量：pickupCode / cabCode / durationMin（可学习旧版表单语义）
+model Reminder {
+  id                  String         @id @default(uuid())
+  userId              String
+  /// 取餐码：用户自定义，任意字符串
+  pickupCode          String
+  /// 柜机 cabCode（旧版表单第二项）
+  cabCode             String
+  /// 取餐码来源：custom（自定义）/ phone_tail（手机尾号）
+  codeMode            String         @default("custom")
+  durationMin         Int
+  status              ReminderStatus @default(PENDING)
+  /// 首次查询得到的指纹，用于排除上一单
+  baselineFingerprint String         @default("")
+  /// 接口返回的柜号 box_sn
+  cabinet             String         @default("")
+  /// 命中时接口返回的订单号（takeOpen 的 orderid）
+  orderId             String         @default("")
+  /// 命中时使用的柜机 locker_id（takeOpen 的 locker_id）
+  lockerId            String         @default("")
+  /// 已执行开箱次数与最近一次时间（防滥用）
+  openCount           Int            @default(0)
+  lastOpenedAt        DateTime?
+  lastDetail          String         @default("")
+  checkCount          Int            @default(0)
+  failCount           Int            @default(0)
+  createdAt           DateTime       @default(now())
+  endsAt              DateTime
+  finishedAt          DateTime?
+  notifiedAt          DateTime?
+  lastCheckAt         DateTime?
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events ReminderEvent[]
+
+  @@index([status, endsAt])
+  @@index([userId, createdAt])
+}
+
+model ReminderEvent {
+  id         String     @id @default(uuid())
+  reminderId String
+  level      EventLevel @default(INFO)
+  message    String
+  createdAt  DateTime   @default(now())
+
+  reminder Reminder @relation(fields: [reminderId], references: [id], onDelete: Cascade)
+
+  @@index([reminderId, createdAt])
+}
+
+// ---------------------------------------------------------------- 取餐柜凭证
+
+/// MemberToken 单行表（id 恒为 1）：AES-256-GCM 加密入库，仅管理员可改。
+model LockerCredential {
+  id                Int       @id @default(1)
+  ciphertext        String
+  iv                String
+  authTag           String
+  /// 形如 "abcd12...wxyz" 的掩码，供列表展示
+  masked            String
+  updatedById       String?
+  updatedAt         DateTime  @updatedAt
+  lastVerifiedAt    DateTime?
+  lastVerifyOk      Boolean?
+  lastVerifyMessage String    @default("")
+
+  updatedBy User? @relation("CredentialEditor", fields: [updatedById], references: [id])
+}
+
+// ---------------------------------------------------------------- 系统配置
+
+/// 键值配置（JSON 字符串），含轮询间隔、任务上限、设备 SN、ntfy 服务地址等。
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------- 观测
+
+/// 待发送短信队列（落库，重启不丢）。
+/// 状态机：PENDING → SENDING → SENT / FAILED。
+/// 重启时 PENDING 会被继续处理；停留在 SENDING 的视为「状态未知」，标 FAILED 但不重发，
+/// 避免重复扣费与重复打扰。
+model SmsJob {
+  id          String    @id @default(uuid())
+  userId      String?
+  phone       String
+  cabCode     String    @default("")
+  boxSn       String    @default("")
+  sn          String    @default("")
+  /// arrival / timeout
+  kind        String    @default("arrival")
+  reminderId  String    @default("")
+  status      String    @default("PENDING")
+  attempts    Int       @default(0)
+  lastError   String    @default("")
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([status, createdAt])
+}
+
+/// 浏览器 Web Push 订阅（每个浏览器一条）。
+/// endpoint 是推送服务商地址，p256dh/auth 是客户端公钥与认证密钥，服务端只做转发。
+model WebPushSubscription {
+  id         String    @id @default(uuid())
+  userId     String
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String    @default("")
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model SmsLog {
+  id         String    @id @default(uuid())
+  userId     String?
+  phone      String
+  template   String
+  params     String    @default("{}")
+  status     SmsStatus
+  providerId String    @default("")
+  errorCode  String    @default("")
+  errorMsg   String    @default("")
+  createdAt  DateTime  @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([phone, createdAt])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String
+  targetType String   @default("")
+  targetId   String   @default("")
+  detail     String   @default("")
+  ip         String   @default("")
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([action])
+}
+
+/// 管理员告警：短信失败、MemberToken 失效、轮询异常等；同时发邮件给 ROOT。
+model AdminAlert {
+  id        String     @id @default(uuid())
+  level     AlertLevel @default(WARN)
+  type      String
+  message   String
+  ackedAt   DateTime?
+  ackedById String?
+  createdAt DateTime   @default(now())
+
+  ackedBy User? @relation("AlertAck", fields: [ackedById], references: [id], onDelete: SetNull)
+
+  @@index([ackedAt, createdAt])
+}

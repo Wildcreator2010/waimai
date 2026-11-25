@@ -1,0 +1,49 @@
+appId: com.mealreminder.desktop
+productName: 取餐提醒
+copyright: Copyright © 2026 Meal Reminder
+
+directories:
+  output: release
+
+# 直接用 node_modules/electron/dist 里已安装的 Electron，不再联网下载 zip。
+# 好处：离线/内网可打包，且打包用的运行时与 npm run start 验证过的完全一致。
+# 版本仍由 package.json 的 electron devDependency 决定。
+electronDist: node_modules/electron/dist
+
+# 只打包编译产物与 package.json，不把 src / 开发依赖带进安装包
+files:
+  - dist/**/*
+  - package.json
+
+asar: true
+compression: normal
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 取餐提醒
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+  category: public.app-category.utilities
+
+linux:
+  target:
+    - AppImage
+  category: Utility
+  synopsis: 取餐提醒桌面客户端

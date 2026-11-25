@@ -1,0 +1,123 @@
+name: meal-reminder
+
+# 服务器专用编排（适配宝塔 nginx + 低内存机器）
+# 与 deploy/docker-compose.yml 的差别：
+#   1. 没有 caddy：TLS 与反代由宝塔 nginx 负责（它已占用 80/443）
+#   2. 没有 web 容器：React 产物由宝塔 nginx 直接托管，省一个进程
+#   3. 所有端口只绑 127.0.0.1，外网必须经 nginx
+#   4. 服务端用预构建镜像（不在本机构建，避免 OOM），并限制内存
+
+services:
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+    mem_limit: 256m
+    command:
+      - postgres
+      - -c
+      - shared_buffers=32MB
+      - -c
+      - max_connections=20
+      - -c
+      - work_mem=2MB
+      - -c
+      - maintenance_work_mem=32MB
+      - -c
+      - fsync=on
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TZ}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  ntfy:
+    image: ${NTFY_IMAGE:-binwiederhier/ntfy:v2.11.0}
+    restart: unless-stopped
+    mem_limit: 96m
+    command: serve
+    environment:
+      TZ: ${TZ}
+      NTFY_BASE_URL: ${NTFY_BASE_URL}
+      NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
+      NTFY_BEHIND_PROXY: 'true'
+      NTFY_ATTACHMENT_CACHE_DIR: /var/cache/ntfy/attachments
+    ports:
+      - '127.0.0.1:${NTFY_PORT:-8081}:80'
+    volumes:
+      - ntfy-cache:/var/cache/ntfy
+
+  server:
+    image: ${SERVER_IMAGE:-meal-reminder-server:prod}
+    restart: unless-stopped
+    mem_limit: 384m
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=192
+      TZ: ${TZ}
+      PORT: 8787
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TTL_SECONDS: ${JWT_ACCESS_TTL_SECONDS}
+      REFRESH_TTL_DAYS: ${REFRESH_TTL_DAYS}
+      EMAIL_TOKEN_TTL_MINUTES: ${EMAIL_TOKEN_TTL_MINUTES:-60}
+      RESET_TOKEN_TTL_MINUTES: ${RESET_TOKEN_TTL_MINUTES:-60}
+      MEMBER_TOKEN_ENC_KEY: ${MEMBER_TOKEN_ENC_KEY}
+      APP_BASE_URL: ${APP_BASE_URL}
+      LOCKER_API_BASE: ${LOCKER_API_BASE}
+      LOCKER_OPENMARK_PATH: ${LOCKER_OPENMARK_PATH:-/wechat/locker/openMark}
+      LOCKER_TAKE_PATH: ${LOCKER_TAKE_PATH:-/wechat/locker/takeCode}
+      LOCKER_OPENBOX_PATH: ${LOCKER_OPENBOX_PATH:-/wechat/locker/takeOpen}
+      LOCKER_TIMEOUT_MS: ${LOCKER_TIMEOUT_MS:-10000}
+      LOCKER_DEVICE_SN: ${LOCKER_DEVICE_SN}
+      LOCKER_MOCK: ${LOCKER_MOCK}
+      MOCK_ARRIVAL_AFTER: ${MOCK_ARRIVAL_AFTER:-2}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      MAIL_DRY_RUN: ${MAIL_DRY_RUN}
+      FIREBASE_SERVICE_ACCOUNT_PATH: ${FIREBASE_SERVICE_ACCOUNT_PATH}
+      NTFY_SERVER_URL: ${NTFY_SERVER_URL}
+      NTFY_PUBLIC_URL: ${NTFY_PUBLIC_URL}
+      NTFY_BASE_URL: ${NTFY_BASE_URL}
+      NTFY_ACCESS_TOKEN: ${NTFY_ACCESS_TOKEN}
+      ALIYUN_ACCESS_KEY_ID: ${ALIYUN_ACCESS_KEY_ID}
+      ALIYUN_ACCESS_KEY_SECRET: ${ALIYUN_ACCESS_KEY_SECRET}
+      ALIYUN_REGION: ${ALIYUN_REGION}
+      ALIYUN_SIGN_NAME: ${ALIYUN_SIGN_NAME}
+      ALIYUN_TEMPLATE_ARRIVAL: ${ALIYUN_TEMPLATE_ARRIVAL}
+      ALIYUN_TEMPLATE_VERIFY: ${ALIYUN_TEMPLATE_VERIFY}
+      ALIYUN_DRY_RUN: ${ALIYUN_DRY_RUN}
+      # 浏览器 Web Push（VAPID）；不配置则跳过浏览器推送
+      WEBPUSH_PUBLIC_KEY: ${WEBPUSH_PUBLIC_KEY:-}
+      WEBPUSH_PRIVATE_KEY: ${WEBPUSH_PRIVATE_KEY:-}
+      WEBPUSH_SUBJECT: ${WEBPUSH_SUBJECT:-mailto:admin@example.com}
+      # 人机验证：默认内置算术题
+      CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-builtin}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+      BOOTSTRAP_SETUP_CODE: ${BOOTSTRAP_SETUP_CODE}
+      RETENTION_REMINDER_DAYS: ${RETENTION_REMINDER_DAYS:-30}
+      RETENTION_AUDIT_DAYS: ${RETENTION_AUDIT_DAYS:-90}
+    ports:
+      - '127.0.0.1:${API_PORT:-8787}:8787'
+    volumes:
+      - ./secrets:/run/secrets:ro
+      - server-data:/app/data
+
+volumes:
+  db-data:
+  ntfy-cache:
+  server-data:

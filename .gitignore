@@ -1,0 +1,70 @@
+# 依赖
+node_modules/
+.pnpm-store/
+.npm-cache/
+
+# 构建产物
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# 环境与密钥
+.env
+.env.*
+!.env.example
+deploy/secrets/*
+!deploy/secrets/.gitkeep
+*.pem
+*.key
+google-services.json
+*-firebase-adminsdk-*.json
+data/
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+
+# 日志
+logs/
+*.log
+
+# 参考旧版（仅本地学习用，不入库）
+.reference/
+
+# 本地工具链（Gradle 发行版等，不入库）
+.tools/
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/release/
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# 本地临时验证产物（截图、一次性脚本、浏览器 profile）
+.tmp/
+
+# Electron 桌面端本地产物
+desktop/release/
+desktop/.smoke-data/
+
+server/.image-deps/
+server/.prisma-generated/
+
+# 部署产物
+deploy/backups/
+deploy/nginx/generated/
+server-image.tar
+/.release/
+/release/

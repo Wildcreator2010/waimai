@@ -1,0 +1,24 @@
+{
+  "name": "meal-reminder-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "取餐提醒 · Electron 桌面客户端（复用 web 站点）",
+  "main": "dist/main.js",
+  "author": "Meal Reminder",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "electron .",
+    "smoke": "electron . --smoke-test",
+    "smoke:ci": "electron . --smoke-test --no-sandbox --single-process --disable-gpu --user-data-dir=.smoke-data",
+    "smoke:load": "electron . --smoke-test --smoke-load --no-sandbox --disable-gpu --user-data-dir=.smoke-data",
+    "dist": "electron-builder",
+    "dist:nosign": "electron-builder --config electron-builder.nosign.yml --win"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.6.3"
+  }
+}

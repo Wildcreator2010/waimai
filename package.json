@@ -1,0 +1,29 @@
+{
+  "name": "meal-reminder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "取餐提醒 · 单仓全栈（server / web / android / desktop / deploy）",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "doctor": "node scripts/doctor.mjs",
+    "config": "node scripts/config.mjs",
+    "env:init": "node scripts/gen-env.mjs",
+    "deploy:render": "node scripts/render-deploy.mjs",
+    "deploy:check": "node scripts/check-env.mjs",
+    "dev": "node scripts/dev.mjs",
+    "build": "npm --prefix server run build && npm --prefix web run build",
+    "test": "npm --prefix server test",
+    "test:e2e": "npm --prefix server run test:e2e",
+    "android:debug": "node scripts/android.mjs assembleDebug",
+    "desktop:smoke": "npm --prefix desktop run smoke",
+    "desktop:dist": "npm --prefix desktop run dist",
+    "image": "node scripts/build-image.mjs",
+    "release": "node scripts/redeploy.mjs --bundle-only",
+    "redeploy": "node scripts/redeploy.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "version": "node scripts/version.mjs"
+  }
+}

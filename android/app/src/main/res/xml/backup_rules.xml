@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 及以下的备份规则：加密会话文件不参与备份（换设备后密钥不匹配会解密失败）。 -->
+<full-backup-content>
+    <exclude
+        domain="sharedpref"
+        path="meal_reminder_secure.xml" />
+</full-backup-content>

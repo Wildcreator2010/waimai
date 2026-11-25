@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 状态栏小图标：单色，Android 会用 alpha 通道着色。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2C8.7,2 6,4.7 6,8v3H4.5v11h15V11H18V8c0,-3.3 -2.7,-6 -6,-6zM12,4.2c2.1,0 3.8,1.7 3.8,3.8v3H8.2V8c0,-2.1 1.7,-3.8 3.8,-3.8zM11,13h2v7h-2z" />
+</vector>

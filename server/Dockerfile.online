@@ -1,0 +1,45 @@
+# 取餐提醒 · 服务端镜像（可联网环境）
+#
+# 适用于能正常访问 npm / Prisma 引擎源的构建机：
+#   docker build -f server/Dockerfile.online -t meal-reminder-server:prod server
+#
+# 受限网络（容器内 TCP 出网被拦）请继续使用 server/Dockerfile 的离线流程：
+#   bash scripts/prepare-image.sh && docker build -t meal-reminder-server:prod server
+ARG NODE_IMAGE=node:22-alpine
+
+FROM ${NODE_IMAGE} AS deps
+WORKDIR /app
+COPY package.json package-lock.json .npmrc* ./
+RUN npm ci --no-audit --no-fund
+
+FROM ${NODE_IMAGE} AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npx prisma generate
+RUN npm run build
+
+FROM ${NODE_IMAGE} AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+ENV TZ=Asia/Shanghai
+
+COPY package.json package-lock.json .npmrc* ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/prisma ./prisma
+
+# 保留 prisma CLI 用于启动时 migrate deploy；重建客户端确保与运行镜像架构一致
+RUN npm prune --omit=dev --no-audit --no-fund \
+ && npm install --no-save --omit=dev prisma@6.16.2 --ignore-scripts --no-audit --no-fund \
+ && npx prisma generate \
+ && mkdir -p /app/data \
+ && chown -R node:node /app
+
+USER node
+EXPOSE 8787
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \
+  CMD node -e "fetch('http://127.0.0.1:8787/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

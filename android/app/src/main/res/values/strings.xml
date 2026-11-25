@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">取餐提醒</string>
+
+    <!-- 通知渠道 -->
+    <string name="channel_arrived">到柜提醒</string>
+    <string name="channel_arrived_id" translatable="false">arrived</string>
+    <string name="channel_arrived_desc">外卖入柜、任务超时等与取餐直接相关的提醒</string>
+    <string name="channel_system">系统消息</string>
+    <string name="channel_system_id" translatable="false">system</string>
+    <string name="channel_system_desc">长连接常驻通知、账号与设备状态等系统消息</string>
+
+    <!-- 通知文案 -->
+    <string name="notif_default_title">外卖已入柜</string>
+    <string name="notif_ntfy_running">正在监听取餐提醒</string>
+    <string name="notif_ntfy_running_desc">后台长连接已开启，点击查看任务</string>
+
+    <!-- 未绑定手机号提示 -->
+    <string name="phone_dialog_title">未绑定手机号</string>
+    <string name="phone_dialog_message">未绑定手机号：短信提醒不可达，只能通过 App 或网页查看</string>
+    <string name="phone_dialog_bind">去绑定</string>
+    <string name="phone_dialog_later">稍后</string>
+
+    <!-- 通用 -->
+    <string name="action_back">返回</string>
+    <string name="action_retry">重试</string>
+    <string name="action_save">保存</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_confirm">确定</string>
+</resources>

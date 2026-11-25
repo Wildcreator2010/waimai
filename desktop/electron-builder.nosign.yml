@@ -1,0 +1,41 @@
+# 无符号链接特权环境下的打包配置。
+#
+# 与 electron-builder.yml 完全相同，只多一个 win.signAndEditExecutable: false。
+# 原因：electron-builder 会用 winCodeSign 里的 rcedit 改 exe 图标与版本信息，
+# 而 winCodeSign 压缩包内含 macOS 的 .dylib 符号链接，Windows 非管理员（未开
+# 开发者模式）解压时会因缺少创建符号链接的特权而失败。
+#
+# 用这个配置打出来的 exe 沿用 Electron 默认图标、没有自定义版本信息，功能不受影响。
+# 具备符号链接特权（开发者模式/管理员）的机器请直接用默认的 electron-builder.yml。
+appId: com.mealreminder.desktop
+productName: 取餐提醒
+copyright: Copyright © 2026 Meal Reminder
+
+directories:
+  output: release
+
+electronDist: node_modules/electron/dist
+
+files:
+  - dist/**/*
+  - package.json
+
+asar: true
+compression: normal
+
+win:
+  signAndEditExecutable: false
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 取餐提醒
