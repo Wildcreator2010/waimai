@@ -10,13 +10,14 @@ pluginManagement {
         .getOrElse("false")
         .toBoolean()
     repositories {
-        if (useChinaMirrors) {
-            maven { url = uri("https://maven.aliyun.com/repository/public") }
-            maven { url = uri("https://maven.aliyun.com/repository/google") }
-        }
+        // 插件标记（plugin marker）在官方源最全；阿里云对部分 KSP 标记返回 502，故官方优先
         google()
         mavenCentral()
         gradlePluginPortal()
+        if (useChinaMirrors) {
+            maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+            maven { url = uri("https://maven.aliyun.com/repository/public") }
+        }
     }
 }
 

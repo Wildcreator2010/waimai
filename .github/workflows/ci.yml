@@ -67,7 +67,8 @@ jobs:
       - run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x android/gradlew
-      - run: ./gradlew assembleDebug --no-daemon
+      # 插件仓库已在 settings.gradle.kts 中改为官方优先；chinaMirrors 仅作兜底
+      - run: ./gradlew clean assembleDebug --no-daemon --no-build-cache -PchinaMirrors=true
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:
